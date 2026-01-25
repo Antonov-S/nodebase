@@ -88,7 +88,7 @@ export const useUpdateWorkflowName = () => {
         );
       },
       onError: error => {
-        toast.error(`Failded to update workflow: ${error.message}`);
+        toast.error(`Failed to update workflow: ${error.message}`);
       }
     })
   );
