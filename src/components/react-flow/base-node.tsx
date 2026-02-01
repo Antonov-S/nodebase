@@ -22,7 +22,7 @@ export function BaseNode({ className, status, ...props }: BaseNodeProps) {
       {status === "error" && (
         <XCircleIcon className="size-2 absolute right-0.5 bottom-0.5 text-red-700 stroke-3" />
       )}
-      {status === "error" && (
+      {status === "success" && (
         <CheckCircle2Icon className="size-2 absolute right-0.5 bottom-0.5 text-green-700 stroke-3" />
       )}
       {status === "loading" && (
