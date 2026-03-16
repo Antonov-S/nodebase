@@ -3,12 +3,15 @@ import { NonRetriableError } from "inngest";
 import prisma from "@/lib/db";
 import { inngest } from "./client";
 import { topologicalSort } from "./utils";
+import { geminiChannel } from "./channels/gemini";
+import { openAiChannel } from "./channels/openai";
 import { NodeType } from "@/generated/prisma/enums";
+import { anthropicChannel } from "./channels/anthropic";
 import { httpRequestChannel } from "./channels/http-request";
 import { manualTriggerChannel } from "./channels/manual-trigger";
 import { stripeTriggerChannel } from "./channels/stripe-trigger";
-import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 import { getExecutor } from "@/features/executions/lib/executor-registry";
+import { googleFormTriggerChannel } from "./channels/google-form-trigger";
 
 export const executeWorkflow = inngest.createFunction(
   { id: "execute-workflow" },
@@ -18,7 +21,10 @@ export const executeWorkflow = inngest.createFunction(
       httpRequestChannel(),
       manualTriggerChannel(),
       googleFormTriggerChannel(),
-      stripeTriggerChannel()
+      stripeTriggerChannel(),
+      geminiChannel(),
+      openAiChannel(),
+      anthropicChannel()
     ]
   },
   async ({ event, step, publish }) => {
