@@ -1,6 +1,7 @@
 "use client";
 
 import z from "zod";
+import Image from "next/image";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { CredentialType } from "@/lib/credential-type";
+import { AVAILABLE_MODELS_GEMINI } from "@/lib/available-models";
+import { useCredentialsByType } from "@/features/credentials/hooks/use-credentials";
 import {
   Select,
   SelectContent,
@@ -33,14 +37,6 @@ import {
   FormMessage
 } from "@/components/ui/form";
 
-export const AVAILABLE_MODELS = [
-  "gemini-3.1-flash-lite-preview",
-  "gemini-3-flash-preview",
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash-lite-preview-09-2025"
-] as const;
-
 const formSchema = z.object({
   variableName: z
     .string()
@@ -49,7 +45,8 @@ const formSchema = z.object({
       message:
         "Variable name must start with a letter or underscore and contain only letters, numbers, and underscores."
     }),
-  model: z.enum(AVAILABLE_MODELS),
+  credentialId: z.string().min(1, "Credential is required"),
+  model: z.enum(AVAILABLE_MODELS_GEMINI),
   systemPrompt: z.string().optional(),
   userPrompt: z.string().min(1, "User prompt is required")
 });
@@ -69,11 +66,15 @@ export const GeminiDialog = ({
   onSubmit,
   defaultValues = {}
 }: Props) => {
+  const { data: credentials, isLoading: isLoadingCredentials } =
+    useCredentialsByType(CredentialType.GEMINI);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      credentialId: defaultValues.credentialId || "",
       variableName: defaultValues.variableName || "",
-      model: defaultValues.model || AVAILABLE_MODELS[0],
+      model: defaultValues.model || AVAILABLE_MODELS_GEMINI[0],
       systemPrompt: defaultValues.systemPrompt || "",
       userPrompt: defaultValues.userPrompt || ""
     }
@@ -91,7 +92,8 @@ export const GeminiDialog = ({
     if (open) {
       form.reset({
         variableName: defaultValues.variableName || "",
-        model: defaultValues.model || AVAILABLE_MODELS[0],
+        credentialId: defaultValues.credentialId || "",
+        model: defaultValues.model || AVAILABLE_MODELS_GEMINI[0],
         systemPrompt: defaultValues.systemPrompt || "",
         userPrompt: defaultValues.userPrompt || ""
       });
@@ -131,6 +133,42 @@ export const GeminiDialog = ({
             />
             <FormField
               control={form.control}
+              name="credentialId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gemini Credential</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isLoadingCredentials || !credentials?.length}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a credential" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {credentials?.map(credential => (
+                        <SelectItem key={credential.id} value={credential.id}>
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src="/logos/gemini.svg"
+                              alt="Gemini"
+                              width={16}
+                              height={16}
+                            />
+                            {credential.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="model"
               render={({ field }) => (
                 <FormItem>
@@ -145,7 +183,7 @@ export const GeminiDialog = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {AVAILABLE_MODELS.map(model => (
+                      {AVAILABLE_MODELS_GEMINI.map(model => (
                         <SelectItem key={model} value={model}>
                           {model}
                         </SelectItem>
